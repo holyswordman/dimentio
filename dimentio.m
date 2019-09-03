@@ -1,4 +1,5 @@
 #include <CoreFoundation/CoreFoundation.h>
+#include <Foundation/Foundation.h>
 #include <mach-o/loader.h>
 #include <mach/mach.h>
 #include <sys/sysctl.h>
@@ -495,17 +496,17 @@ dimentio(uint64_t nonce) {
 }
 
 int
-main(int argc, char *argv[]) {
+main(void) {
 	kaddr_t kbase, kslide;
 	pfinder_t pfinder;
-
+    NSDictionary *offsets = [NSDictionary dictionaryWithContentsOfFile:@"/jb/offsets.plist"];
 	if(init_arm_pgshift() == KERN_SUCCESS) {
 		printf("arm_pgshift: %u\n", arm_pgshift);
 		if(init_tfp0() == KERN_SUCCESS) {
 			printf("tfp0: 0x%" PRIx32 "\n", tfp0);
-			if(argc == 3) {
-				kbase = (kaddr_t)strtoull(argv[1], NULL, 0);
-				kslide = (kaddr_t)strtoull(argv[2], NULL, 0);
+			if(offsets[@"KernelBase"] && offsets[@"KernelSlide"]) {
+				kbase = (kaddr_t)strtoull([offsets[@"KernelBase"] UTF8String], NULL, 0);
+				kslide = (kaddr_t)strtoull([offsets[@"KernelSlide"] UTF8String], NULL, 0);
 				printf("kbase: " KADDR_FMT "\n", kbase);
 				printf("kslide: " KADDR_FMT "\n", kslide);
 				if(pfinder_init(&pfinder, kbase) == KERN_SUCCESS) {
